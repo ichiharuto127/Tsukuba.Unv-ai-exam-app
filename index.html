@@ -476,6 +476,7 @@ body {
     <button class="tab-btn" data-tab="essay">論述</button>
     <button class="tab-btn" data-tab="glossary">用語集</button>
     <button class="tab-btn" data-tab="history">履歴</button>
+    <button class="tab-btn" data-tab="review">復習</button>
   </div>
 </div>
 
@@ -658,6 +659,57 @@ body {
     </div>
   </div>
 
+  <!-- 復習ページ -->
+  <div id="panel-review" class="tab-panel">
+    <div class="card" id="review-start-card">
+      <h3 style="margin-bottom:12px;">復習テスト</h3>
+      <p style="color:var(--text-light);margin-bottom:16px;">模擬テストで間違えた穴埋め・曖昧だった論述からランダムに出題されます。<br>復習の結果は履歴に記録されません。</p>
+      <div id="review-stats" style="margin-bottom:16px;padding:12px;background:var(--bg);border-radius:8px;font-size:0.9rem;"></div>
+      <button class="btn btn-primary" id="btn-start-review">復習テストを開始する</button>
+    </div>
+
+    <div class="card" id="review-run-card" style="display:none;">
+      <div id="review-progress" style="font-size:0.85rem;color:var(--text-light);margin-bottom:12px;"></div>
+
+      <!-- 穴埋め -->
+      <div id="review-run-fill-wrap">
+        <div class="fill-question-text" id="review-q-text" style="margin-bottom:16px;"></div>
+        <div id="review-choice-grid" class="choice-grid"></div>
+        <div id="review-input-wrap" style="display:none;margin-top:12px;">
+          <input type="text" id="review-input" class="fill-input" style="width:100%;box-sizing:border-box;">
+          <button class="btn btn-primary" id="btn-review-submit" style="margin-top:8px;">確認</button>
+        </div>
+        <div id="review-result" style="display:none;margin-top:12px;">
+          <div id="review-result-label" style="font-weight:700;font-size:1.1rem;margin-bottom:4px;"></div>
+          <div id="review-result-answer" style="font-size:0.9rem;color:var(--text-light);margin-bottom:4px;"></div>
+          <div id="review-result-explanation" style="font-size:0.85rem;color:var(--text-light);"></div>
+        </div>
+      </div>
+
+      <!-- 論述 -->
+      <div id="review-run-essay-wrap" style="display:none;">
+        <div class="essay-question-text" id="review-essay-q-text" style="margin-bottom:16px;"></div>
+        <button class="btn btn-outline" id="btn-review-essay-show">模範解答を見る</button>
+        <div id="review-essay-answer-area" style="display:none;margin-top:12px;">
+          <div id="review-essay-model-answer" style="background:var(--bg);padding:12px;border-radius:8px;font-size:0.9rem;line-height:1.6;margin-bottom:12px;"></div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-success" id="btn-review-essay-ok">できた</button>
+            <button class="btn btn-warning" id="btn-review-essay-ambig">曖昧</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="btn-review-next" style="display:none;margin-top:16px;">次へ →</button>
+    </div>
+
+    <div class="card" id="review-end-card" style="display:none;">
+      <h3 style="margin-bottom:12px;">復習完了！</h3>
+      <div id="review-score" style="font-size:1.3rem;font-weight:700;margin-bottom:8px;"></div>
+      <p style="font-size:0.85rem;color:var(--text-light);margin-bottom:16px;">※復習結果は履歴には記録されません</p>
+      <button class="btn btn-primary" id="btn-review-finish">復習リストに戻る</button>
+    </div>
+  </div>
+
 </div><!-- /#main -->
 
 <!-- ======== 振り返りモーダル ======== -->
@@ -736,7 +788,7 @@ body {
      2. タブ切替
   ───────────────────────────────── */
   var tabBtns   = document.querySelectorAll('.tab-btn');
-  var tabPanels = { fill: document.getElementById('panel-fill'), essay: document.getElementById('panel-essay'), test: document.getElementById('panel-test'), glossary: document.getElementById('panel-glossary'), history: document.getElementById('panel-history') };
+  var tabPanels = { fill: document.getElementById('panel-fill'), essay: document.getElementById('panel-essay'), test: document.getElementById('panel-test'), glossary: document.getElementById('panel-glossary'), history: document.getElementById('panel-history'), review: document.getElementById('panel-review') };
 
   tabBtns.forEach(function(btn) {
     btn.addEventListener('click', function() {
@@ -748,6 +800,7 @@ body {
       if (target === 'test') { document.getElementById('panel-fill').classList.remove('active'); }
       if (target === 'history') renderHistory();
       if (target === 'glossary') renderGlossary();
+      if (target === 'review') renderReviewStats();
     });
   });
 
@@ -1607,6 +1660,12 @@ body {
       '穴埋め: ' + testState.score + ' / ' + testState.fillTotal + '問 (' + scorePct + '%)<br>' +
       '<span style="font-size:1.4rem;">論述: ' + essayOk + ' / ' + essayTotal + '問 できた</span>';
 
+    // 間違えた問題を復習リストに永続追加
+    var wrongFillIds = testState.questions.filter(function(q){ return q.type === 'fill' && !q.userCorrect; }).map(function(q){ return q.id; });
+    var ambigEssayIds = testState.questions.filter(function(q){ return q.type === 'essay' && q.userEval === 'ambig'; }).map(function(q){ return q.id; });
+    addToReviewFill(wrongFillIds);
+    addToReviewEssay(ambigEssayIds);
+
     var now = new Date();
     addTestHistory({
       id: Date.now(),
@@ -1712,7 +1771,222 @@ body {
     
     reviewModal.style.display = 'flex';
   }
-  
+
+  /* ─────────────────────────────────
+     11. 復習ページ
+  ───────────────────────────────── */
+
+  // 復習リストの永続化
+  function getReviewFillIds() { return lsGet('review_fill_ids', []); }
+  function getReviewEssayIds() { return lsGet('review_essay_ids', []); }
+
+  function addToReviewFill(ids) {
+    if (!ids || ids.length === 0) return;
+    var cur = new Set(getReviewFillIds());
+    ids.forEach(function(id){ cur.add(id); });
+    lsSet('review_fill_ids', Array.from(cur));
+  }
+  function addToReviewEssay(ids) {
+    if (!ids || ids.length === 0) return;
+    var cur = new Set(getReviewEssayIds());
+    ids.forEach(function(id){ cur.add(id); });
+    lsSet('review_essay_ids', Array.from(cur));
+  }
+
+  function renderReviewStats() {
+    var fillIds  = getReviewFillIds();
+    var essayIds = getReviewEssayIds();
+    var statsEl  = document.getElementById('review-stats');
+    if (fillIds.length === 0 && essayIds.length === 0) {
+      statsEl.textContent = '復習リストはまだ空です。模擬テストを受けると、間違えた問題がここに追加されます。';
+    } else {
+      statsEl.innerHTML = '穴埋め: <strong>' + fillIds.length + '問</strong>　論述: <strong>' + essayIds.length + '問</strong> が復習リストにあります。';
+    }
+    // スタートカードを前面に
+    document.getElementById('review-start-card').style.display = 'block';
+    document.getElementById('review-run-card').style.display   = 'none';
+    document.getElementById('review-end-card').style.display   = 'none';
+  }
+
+  // 復習テスト状態
+  var reviewState = { questions: [], idx: 0, score: 0, fillTotal: 0 };
+
+  function buildReviewQueue() {
+    var fillIds  = getReviewFillIds();
+    var essayIds = getReviewEssayIds();
+    var fillQs   = fillAll.filter(function(q){ return fillIds.indexOf(q.id) >= 0; });
+    var essayQs  = essayAll.filter(function(q){ return essayIds.indexOf(q.id) >= 0; });
+    // 最大20問、穴埋め優先でシャッフル
+    var shuffled = fillQs.sort(function(){ return Math.random() - 0.5; })
+      .concat(essayQs.sort(function(){ return Math.random() - 0.5; }))
+      .slice(0, 20);
+    return shuffled.sort(function(){ return Math.random() - 0.5; });
+  }
+
+  document.getElementById('btn-start-review').addEventListener('click', function() {
+    var queue = buildReviewQueue();
+    if (queue.length === 0) {
+      alert('復習リストが空です。先に模擬テストを受けてください。');
+      return;
+    }
+    reviewState.questions = queue.map(function(q) {
+      var isFill = !!q.answer;
+      var qClone = {};
+      Object.keys(q).forEach(function(k){ qClone[k] = q[k]; });
+      qClone.type = isFill ? 'fill' : 'essay';
+      // テキストをランダムに1つ選択
+      if (isFill && q.texts && q.texts.length > 1) {
+        qClone.usedText = q.texts[Math.floor(Math.random() * q.texts.length)];
+      } else if (isFill) {
+        qClone.usedText = q.text || (q.texts && q.texts[0]) || '';
+      }
+      if (!isFill && q.texts && q.texts.length > 1) {
+        qClone.usedText = q.texts[Math.floor(Math.random() * q.texts.length)];
+      } else if (!isFill) {
+        qClone.usedText = q.texts ? q.texts[0] : q.question;
+      }
+      return qClone;
+    });
+    reviewState.idx       = 0;
+    reviewState.score     = 0;
+    reviewState.fillTotal = reviewState.questions.filter(function(q){ return q.type === 'fill'; }).length;
+
+    document.getElementById('review-start-card').style.display = 'none';
+    document.getElementById('review-run-card').style.display   = 'block';
+    document.getElementById('review-end-card').style.display   = 'none';
+    renderReviewQuestion();
+  });
+
+  function renderReviewQuestion() {
+    var q   = reviewState.questions[reviewState.idx];
+    var tot = reviewState.questions.length;
+    document.getElementById('review-progress').textContent =
+      (reviewState.idx + 1) + ' / ' + tot + ' 問目';
+
+    // リセット
+    document.getElementById('review-result').style.display      = 'none';
+    document.getElementById('review-result-label').textContent  = '';
+    document.getElementById('review-result-answer').textContent = '';
+    document.getElementById('review-result-explanation').textContent = '';
+    document.getElementById('btn-review-next').style.display    = 'none';
+    document.getElementById('review-input').value               = '';
+
+    if (q.type === 'fill') {
+      document.getElementById('review-run-fill-wrap').style.display  = 'block';
+      document.getElementById('review-run-essay-wrap').style.display = 'none';
+
+      var rawText = q.usedText || q.text || '';
+      document.getElementById('review-q-text').innerHTML = escapeHtml(rawText).replace(/____/g, '<span class="blank">____</span>');
+
+      var useInput = (q.mode === 'input');
+      document.getElementById('review-choice-grid').innerHTML = '';
+      document.getElementById('review-input-wrap').style.display = useInput ? 'block' : 'none';
+
+      if (!useInput && q.choices && q.choices.length > 0) {
+        var grid = document.getElementById('review-choice-grid');
+        q.choices.sort(function(){ return Math.random() - 0.5; }).forEach(function(c) {
+          var btn = document.createElement('button');
+          btn.className = 'choice-btn';
+          btn.textContent = c;
+          btn.addEventListener('click', function() {
+            submitReviewFill(c, q);
+          });
+          grid.appendChild(btn);
+        });
+      }
+    } else {
+      document.getElementById('review-run-fill-wrap').style.display  = 'none';
+      document.getElementById('review-run-essay-wrap').style.display = 'block';
+      document.getElementById('review-essay-q-text').textContent     = q.usedText || q.question || '';
+      document.getElementById('btn-review-essay-show').style.display = 'block';
+      document.getElementById('review-essay-answer-area').style.display = 'none';
+    }
+  }
+
+  function submitReviewFill(userAnswer, q) {
+    var accept   = q.accept || [q.answer];
+    var norm     = function(s){ return s.replace(/[（）()【】「」『』\s]/g,'').toLowerCase(); };
+    var correct  = accept.some(function(a){ return norm(userAnswer) === norm(a); });
+    if (correct) reviewState.score++;
+    q.userCorrect = correct;
+    q.userAnswer  = userAnswer;
+
+    // 選択肢ボタンを無効化
+    document.getElementById('review-choice-grid').querySelectorAll('.choice-btn').forEach(function(btn){
+      btn.disabled = true;
+      if (norm(btn.textContent) === norm(q.answer) || (q.accept||[]).some(function(a){ return norm(btn.textContent) === norm(a); })) {
+        btn.classList.add('correct');
+      }
+      if (norm(btn.textContent) === norm(userAnswer) && !correct) {
+        btn.classList.add('wrong');
+      }
+    });
+    document.getElementById('review-input-wrap').style.display = 'none';
+
+    var resEl   = document.getElementById('review-result');
+    var labelEl = document.getElementById('review-result-label');
+    var ansEl   = document.getElementById('review-result-answer');
+    var expEl   = document.getElementById('review-result-explanation');
+    labelEl.textContent = correct ? '正解！' : '不正解';
+    labelEl.style.color = correct ? 'var(--success)' : 'var(--danger)';
+    ansEl.textContent   = '正解: ' + q.answer;
+    expEl.textContent   = q.explanation || '';
+    resEl.style.display = 'block';
+    document.getElementById('btn-review-next').style.display = 'block';
+  }
+
+  document.getElementById('btn-review-submit').addEventListener('click', function() {
+    var q   = reviewState.questions[reviewState.idx];
+    var val = document.getElementById('review-input').value.trim();
+    if (!val) return;
+    submitReviewFill(val, q);
+  });
+  document.getElementById('review-input').addEventListener('keydown', function(e){
+    if (e.key === 'Enter') document.getElementById('btn-review-submit').click();
+  });
+
+  document.getElementById('btn-review-essay-show').addEventListener('click', function() {
+    var q = reviewState.questions[reviewState.idx];
+    document.getElementById('review-essay-model-answer').textContent = q.model_answer || '';
+    document.getElementById('review-essay-answer-area').style.display = 'block';
+    this.style.display = 'none';
+  });
+
+  function handleReviewEssay(eval_) {
+    var q   = reviewState.questions[reviewState.idx];
+    q.userEval = eval_;
+    if (eval_ === 'ok') reviewState.score++;
+    document.getElementById('review-essay-answer-area').style.display = 'none';
+    document.getElementById('btn-review-next').style.display = 'block';
+  }
+  document.getElementById('btn-review-essay-ok').addEventListener('click',    function(){ handleReviewEssay('ok'); });
+  document.getElementById('btn-review-essay-ambig').addEventListener('click', function(){ handleReviewEssay('ambig'); });
+
+  document.getElementById('btn-review-next').addEventListener('click', function() {
+    reviewState.idx++;
+    if (reviewState.idx >= reviewState.questions.length) {
+      // 終了
+      document.getElementById('review-run-card').style.display = 'none';
+      document.getElementById('review-end-card').style.display = 'block';
+      var fillOk   = reviewState.questions.filter(function(q){ return q.type === 'fill'  && q.userCorrect; }).length;
+      var essayOk  = reviewState.questions.filter(function(q){ return q.type === 'essay' && q.userEval === 'ok'; }).length;
+      var fillTot  = reviewState.questions.filter(function(q){ return q.type === 'fill'; }).length;
+      var essayTot = reviewState.questions.filter(function(q){ return q.type === 'essay'; }).length;
+      var html = '';
+      if (fillTot  > 0) html += '穴埋め: <strong>' + fillOk  + ' / ' + fillTot  + '</strong><br>';
+      if (essayTot > 0) html += '論述:   <strong>' + essayOk + ' / ' + essayTot + '</strong>';
+      document.getElementById('review-score').innerHTML = html;
+    } else {
+      renderReviewQuestion();
+    }
+  });
+
+  document.getElementById('btn-review-finish').addEventListener('click', function() {
+    document.getElementById('review-end-card').style.display   = 'none';
+    document.getElementById('review-start-card').style.display = 'block';
+    renderReviewStats();
+  });
+
 })();
 </script>
 
