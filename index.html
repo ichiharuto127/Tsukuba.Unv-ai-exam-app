@@ -1385,11 +1385,16 @@ body {
   }
 
   document.getElementById('btn-start-test').addEventListener('click', function(){
-    // 穴埋め問題からランダムに10問選択
-    var pool = fillAll.slice().sort(function(){ return Math.random() - 0.5; });
-    testState.questions = pool.slice(0, 10);
+    var poolFill = fillAll.slice().sort(function(){ return Math.random() - 0.5; });
+    var poolEssay = essayAll.slice().sort(function(){ return Math.random() - 0.5; });
+    
+    var selectedFill = poolFill.slice(0, 50).map(function(q){ return Object.assign({}, q, {type: 'fill'}); });
+    var selectedEssay = poolEssay.slice(0, 5).map(function(q){ return Object.assign({}, q, {type: 'essay'}); });
+    
+    testState.questions = selectedFill.concat(selectedEssay);
     testState.idx = 0;
-    testState.score = 0;
+    testState.score = 0; // 穴埋めのスコアのみ
+    testState.fillTotal = selectedFill.length;
     
     document.getElementById('test-start-card').style.display = 'none';
     document.getElementById('test-end-card').style.display = 'none';
@@ -1403,48 +1408,64 @@ body {
     if (!q) { finishTest(); return; }
     
     testState.answered = false;
-    document.getElementById('test-progress').textContent = '第 ' + (testState.idx + 1) + ' 問 / 全 ' + testState.questions.length + ' 問';
-    
-    // ランダムテキスト適用
-    var qText = getQuestionText(q);
-    document.getElementById('test-q-text').innerHTML = escapeHtml(qText).replace(/____/g, '<span class="blank">　　　　</span>');
-    
-    var res = document.getElementById('test-result');
-    res.style.display = 'none';
-    res.className = '';
+    document.getElementById('test-progress').textContent = '第 ' + (testState.idx + 1) + ' 問 / 全 ' + testState.questions.length + ' 問 (' + (q.type === 'fill' ? '穴埋め' : '論述') + ')';
     document.getElementById('btn-test-next').style.display = 'none';
     
-    var grid = document.getElementById('test-choice-grid');
-    var inputWrap = document.getElementById('test-input-wrap');
-    var inp = document.getElementById('test-input');
+    var qText = getQuestionText(q);
+    q.usedText = qText; // 履歴保存用
     
-    if (q.mode === 'input') {
-      grid.style.display = 'none';
-      inputWrap.style.display = 'flex';
-      inp.value = '';
-      inp.className = '';
-      inp.disabled = false;
-      inp.focus();
+    if (q.type === 'fill') {
+      document.getElementById('test-run-fill-wrap').style.display = 'block';
+      document.getElementById('test-run-essay-wrap').style.display = 'none';
+      
+      document.getElementById('test-q-text').innerHTML = escapeHtml(qText).replace(/____/g, '<span class="blank">　　　　</span>');
+      var res = document.getElementById('test-result');
+      res.style.display = 'none';
+      res.className = '';
+      
+      var grid = document.getElementById('test-choice-grid');
+      var inputWrap = document.getElementById('test-input-wrap');
+      var inp = document.getElementById('test-input');
+      
+      if (q.mode === 'input') {
+        grid.style.display = 'none';
+        inputWrap.style.display = 'flex';
+        inp.value = '';
+        inp.className = '';
+        inp.disabled = false;
+        inp.focus();
+      } else {
+        inputWrap.style.display = 'none';
+        grid.style.display = 'grid';
+        grid.innerHTML = '';
+        var choices = Array.isArray(q.choices) ? q.choices.slice() : [q.answer];
+        choices = choices.sort(function(){ return Math.random() - 0.5; });
+        choices.forEach(function(c) {
+          var btn = document.createElement('button');
+          btn.className = 'choice-btn';
+          btn.textContent = c;
+          btn.addEventListener('click', function(){ onTestChoiceClick(c, q, btn); });
+          grid.appendChild(btn);
+        });
+      }
     } else {
-      inputWrap.style.display = 'none';
-      grid.style.display = 'grid';
-      grid.innerHTML = '';
-      var choices = Array.isArray(q.choices) ? q.choices.slice() : [q.answer];
-      choices = choices.sort(function(){ return Math.random() - 0.5; });
-      choices.forEach(function(c) {
-        var btn = document.createElement('button');
-        btn.className = 'choice-btn';
-        btn.textContent = c;
-        btn.addEventListener('click', function(){ onTestChoiceClick(c, q, btn); });
-        grid.appendChild(btn);
-      });
+      // 論述
+      document.getElementById('test-run-fill-wrap').style.display = 'none';
+      document.getElementById('test-run-essay-wrap').style.display = 'block';
+      
+      document.getElementById('test-essay-q-text').textContent = qText;
+      document.getElementById('btn-test-essay-show').style.display = 'inline-block';
+      document.getElementById('test-essay-answer-area').style.display = 'none';
     }
   }
 
+  // 穴埋め用
   function onTestChoiceClick(chosen, q, btnClicked) {
     if (testState.answered) return;
     testState.answered = true;
     var correct = (norm(chosen) === norm(q.answer));
+    q.userCorrect = correct;
+    q.userAnswer = chosen;
     if (correct) testState.score++;
     
     var btns = document.getElementById('test-choice-grid').querySelectorAll('.choice-btn');
@@ -1462,6 +1483,7 @@ body {
   function onTestInputSubmit() {
     if (testState.answered) return;
     var q = testState.questions[testState.idx];
+    if (q.type !== 'fill') return;
     var inp = document.getElementById('test-input');
     var val = norm(inp.value);
     if (!val) return;
@@ -1469,6 +1491,8 @@ body {
     
     var accepts = Array.isArray(q.accept) ? q.accept : [q.answer];
     var correct = accepts.some(function(a){ return norm(a) === val; });
+    q.userCorrect = correct;
+    q.userAnswer = inp.value;
     if (correct) testState.score++;
     
     inp.disabled = true;
@@ -1490,6 +1514,29 @@ body {
     document.getElementById('btn-test-next').style.display = 'block';
   }
 
+  // 論述用
+  document.getElementById('btn-test-essay-show').addEventListener('click', function(){
+    var q = testState.questions[testState.idx];
+    if (!q || q.type !== 'essay') return;
+    this.style.display = 'none';
+    document.getElementById('test-essay-answer-area').style.display = 'block';
+    document.getElementById('test-essay-model-answer').textContent = q.model_answer || '';
+  });
+
+  document.getElementById('btn-test-essay-ok').addEventListener('click', function(){
+    var q = testState.questions[testState.idx];
+    q.userEval = 'ok';
+    testState.answered = true;
+    document.getElementById('btn-test-next').style.display = 'block';
+  });
+
+  document.getElementById('btn-test-essay-ambig').addEventListener('click', function(){
+    var q = testState.questions[testState.idx];
+    q.userEval = 'ambig';
+    testState.answered = true;
+    document.getElementById('btn-test-next').style.display = 'block';
+  });
+
   document.getElementById('btn-test-next').addEventListener('click', function(){
     testState.idx++;
     renderTestQuestion();
@@ -1499,16 +1546,18 @@ body {
     document.getElementById('test-run-card').style.display = 'none';
     document.getElementById('test-end-card').style.display = 'block';
     
-    var scorePct = Math.round(testState.score / testState.questions.length * 100);
-    document.getElementById('test-score').textContent = testState.score + ' / ' + testState.questions.length + ' (' + scorePct + '%)';
+    var scorePct = testState.fillTotal > 0 ? Math.round(testState.score / testState.fillTotal * 100) : 0;
+    document.getElementById('test-score').textContent = 'スコア: ' + testState.score + ' / ' + testState.fillTotal + ' (' + scorePct + '%)';
     
     // 保存
     var now = new Date();
     addTestHistory({
+      id: Date.now(),
       date: now.toLocaleString(),
       score: testState.score,
-      total: testState.questions.length,
-      pct: scorePct
+      total: testState.fillTotal,
+      pct: scorePct,
+      questions: testState.questions // 詳細保存
     });
   }
 
@@ -1532,6 +1581,11 @@ body {
       card.style.display = 'flex';
       card.style.justifyContent = 'space-between';
       card.style.alignItems = 'center';
+      card.style.cursor = 'pointer'; // マウスオーバーで指マークに
+      card.style.marginBottom = '12px'; // 隙間をあける
+      
+      // カード全体をタップできるようにする
+      card.addEventListener('click', function(){ showReviewModal(r); });
       
       var left = document.createElement('div');
       var dateEl = document.createElement('div');
@@ -1541,17 +1595,68 @@ body {
       var scoreEl = document.createElement('div');
       scoreEl.style.fontWeight = 'bold';
       scoreEl.style.fontSize = '1.1rem';
-      scoreEl.textContent = '正答率: ' + r.pct + '% (' + r.score + '/' + r.total + ')';
+      scoreEl.textContent = '穴埋め正答率: ' + r.pct + '% (' + r.score + '/' + r.total + ')';
       
       left.appendChild(dateEl);
       left.appendChild(scoreEl);
       card.appendChild(left);
+      
+      var btnReview = document.createElement('button');
+      btnReview.className = 'btn btn-outline btn-sm';
+      btnReview.textContent = '振り返る';
+      // ボタン自体がクリックされても親のcardに伝播するので問題ない
+      card.appendChild(btnReview);
+      
       listEl.appendChild(card);
     });
   }
 
+
+// レビューモーダル処理
+  var reviewModal = document.getElementById('review-modal');
+  document.getElementById('btn-close-review').addEventListener('click', function(){
+    reviewModal.style.display = 'none';
+  });
+  
+  function showReviewModal(record) {
+    document.getElementById('review-modal-title').textContent = record.date + ' の振り返り';
+    var list = document.getElementById('review-modal-list');
+    list.innerHTML = '';
+    
+    if (!record.questions || record.questions.length === 0) {
+      list.textContent = '詳細データが保存されていません。';
+      reviewModal.style.display = 'flex';
+      return;
+    }
+    
+    record.questions.forEach(function(q, i) {
+      var item = document.createElement('div');
+      item.className = 'review-item';
+      
+      if (q.type === 'fill') {
+        item.classList.add(q.userCorrect ? 'correct' : 'wrong');
+        var html = '<div class="review-item-q">Q' + (i+1) + '. ' + escapeHtml(q.usedText||q.text) + '</div>';
+        html += '<div class="review-item-ans"><strong>あなたの回答:</strong> ' + escapeHtml(q.userAnswer||'無回答') + '</div>';
+        html += '<div class="review-item-ans"><strong>正解:</strong> ' + escapeHtml(q.answer||'') + '</div>';
+        if (q.explanation) html += '<div class="review-item-exp"><strong>解説:</strong> ' + escapeHtml(q.explanation) + '</div>';
+        item.innerHTML = html;
+      } else {
+        item.classList.add(q.userEval === 'ok' ? 'essay-ok' : 'essay-ambig');
+        var evalText = q.userEval === 'ok' ? 'できた' : (q.userEval === 'ambig' ? '曖昧' : '未回答');
+        var html = '<div class="review-item-q">Q' + (i+1) + ' [論述]. ' + escapeHtml(q.usedText||q.question) + '</div>';
+        html += '<div class="review-item-ans"><strong>自己評価:</strong> ' + evalText + '</div>';
+        html += '<div class="review-item-exp"><strong>模範解答:</strong><br>' + escapeHtml(q.model_answer||'') + '</div>';
+        item.innerHTML = html;
+      }
+      list.appendChild(item);
+    });
+    
+    reviewModal.style.display = 'flex';
+  }
+  
 })();
 </script>
+
 
 <div id="review-modal">
   <div id="review-modal-content">
