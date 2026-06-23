@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>人工知能 確認テスト対策</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f5f6fa;
+  --surface: #ffffff;
+  --primary: #3b6fd4;
+  --primary-dark: #2d57b0;
+  --success: #2ecc71;
+  --danger: #e74c3c;
+  --warning: #f39c12;
+  --muted: #7f8c8d;
+  --border: #dce1eb;
+  --text: #2c3e50;
+  --text-light: #5d6d7e;
+  --radius: 8px;
+  --shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ヘッダ */
+#app-header {
+  background: var(--primary);
+  color: #fff;
+  padding: 12px 16px 0;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+#app-header h1 { font-size: 1rem; font-weight: 700; margin-bottom: 10px; opacity: 0.95; }
+
+/* タブ */
+#tabs { display: flex; gap: 4px; }
+.tab-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.75);
+  font-size: 0.875rem;
+  padding: 8px 14px;
+  border-radius: var(--radius) var(--radius) 0 0;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.15s, color 0.15s;
+}
+.tab-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+.tab-btn.active { background: var(--bg); color: var(--primary); }
+
+/* メインコンテンツ */
+#main { max-width: 760px; margin: 0 auto; padding: 20px 16px 48px; }
+
+/* カード */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+/* 回フィルタ */
+#filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+#filter-bar label { font-size: 0.8rem; color: var(--text-light); font-weight: 600; margin-right: 2px; }
+.lec-btn {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  cursor: pointer;
+  color: var(--text-light);
+  transition: all 0.15s;
+}
+.lec-btn:hover { border-color: var(--primary); color: var(--primary); }
+.lec-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+/* ボタン汎用 */
+.btn {
+  display: inline-block;
+  border: none;
+  border-radius: var(--radius);
+  padding: 9px 18px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.btn:hover { opacity: 0.88; }
+.btn:active { transform: scale(0.98); }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-success { background: var(--success); color: #fff; }
+.btn-danger  { background: var(--danger);  color: #fff; }
+.btn-warning { background: var(--warning); color: #fff; }
+.btn-outline {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  color: var(--text-light);
+}
+.btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+.btn-sm { padding: 5px 12px; font-size: 0.82rem; }
+
+/* ────────────────
+   穴埋めタブ
+──────────────── */
+#fill-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+
+#fill-progress { color: var(--text-light); font-size: 0.85rem; margin-bottom: 12px; }
+
+.fill-question-text {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  margin-bottom: 16px;
+  font-weight: 500;
+}
+.fill-question-text .blank {
+  display: inline-block;
+  min-width: 120px;
+  border-bottom: 2px solid var(--primary);
+  color: var(--primary);
+  font-weight: 700;
+  padding: 0 4px;
+}
+
+/* choice ボタン */
+#choice-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.choice-btn {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text);
+  transition: all 0.15s;
+  line-height: 1.4;
+}
+.choice-btn:hover:not(:disabled) { border-color: var(--primary); background: #edf2ff; }
+.choice-btn:disabled { cursor: default; }
+.choice-btn.correct  { background: #d4f5e2; border-color: var(--success); color: #1a6b3f; }
+.choice-btn.wrong    { background: #fde8e8; border-color: var(--danger);  color: #8b1c1c; }
+
+/* input */
+#fill-input-wrap { display: flex; gap: 8px; margin-bottom: 14px; }
+#fill-input-wrap input {
+  flex: 1;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 9px 12px;
+  font-size: 0.95rem;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+#fill-input-wrap input:focus { border-color: var(--primary); }
+#fill-input-wrap input.correct { border-color: var(--success); background: #d4f5e2; }
+#fill-input-wrap input.wrong   { border-color: var(--danger);  background: #fde8e8; }
+
+/* 結果パネル */
+#fill-result {
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  display: none;
+}
+#fill-result.correct { background: #d4f5e2; border-left: 4px solid var(--success); }
+#fill-result.wrong   { background: #fde8e8; border-left: 4px solid var(--danger);  }
+#fill-result-label { font-weight: 700; font-size: 1rem; margin-bottom: 6px; }
+#fill-result-answer { margin-bottom: 6px; }
+#fill-result-explanation { color: var(--text-light); font-size: 0.88rem; }
+
+/* 穴埋め完了 */
+#fill-done { text-align: center; padding: 32px 0; }
+#fill-done p { color: var(--text-light); margin-bottom: 12px; }
+
+/* ────────────────
+   論述タブ
+──────────────── */
+#essay-progress { color: var(--text-light); font-size: 0.85rem; margin-bottom: 12px; }
+
+.essay-question-text {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  line-height: 1.7;
+}
+
+#essay-answer-area { display: none; }
+#essay-model-answer {
+  background: #f8f9fb;
+  border-left: 4px solid var(--primary);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+.key-points-label { font-weight: 700; margin-bottom: 8px; font-size: 0.9rem; }
+.key-point-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+}
+.key-point-item input[type="checkbox"] { margin-top: 3px; accent-color: var(--primary); }
+
+#essay-self-eval { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+#essay-eval-result {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  margin-top: 8px;
+  min-height: 20px;
+}
+
+#essay-nav { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; align-items: center; }
+
+/* ────────────────
+   用語集タブ
+──────────────── */
+#glossary-search-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+#glossary-search-bar input {
+  flex: 1;
+  min-width: 160px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  color: var(--text);
+  outline: none;
+}
+#glossary-search-bar input:focus { border-color: var(--primary); }
+
+#glossary-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+#glossary-count { color: var(--text-light); font-size: 0.85rem; }
+
+.glossary-list { display: flex; flex-direction: column; gap: 8px; }
+.glossary-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  transition: border-color 0.15s;
+}
+.glossary-card:hover { border-color: var(--primary); }
+.glossary-term { font-weight: 700; font-size: 1rem; }
+.glossary-reading { color: var(--text-light); font-size: 0.8rem; margin-bottom: 4px; }
+.glossary-def-wrap {}
+.glossary-def {
+  color: var(--text-light);
+  font-size: 0.88rem;
+  line-height: 1.6;
+  margin-top: 4px;
+}
+.glossary-def-hidden {
+  background: #e9ecf0;
+  color: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  margin-top: 4px;
+  padding: 2px 6px;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  transition: background 0.15s;
+}
+.glossary-def-hidden:hover { background: #d4d9e0; }
+.glossary-def-hidden.revealed {
+  background: #edf2ff;
+  color: var(--text-light);
+  border: 1px solid var(--border);
+}
+.glossary-lec-tag {
+  display: inline-block;
+  background: #edf2ff;
+  color: var(--primary);
+  font-size: 0.75rem;
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+/* ────────────────
+   カバレッジタブ
+──────────────── */
+.coverage-section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-light);
+  margin: 20px 0 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.8rem;
+}
+.coverage-row {
+  display: grid;
+  grid-template-columns: 72px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.coverage-lec-label { font-size: 0.85rem; font-weight: 700; color: var(--text-light); }
+.coverage-bar-wrap {
+  background: #e9ecf0;
+  border-radius: 4px;
+  height: 16px;
+  overflow: hidden;
+  position: relative;
+}
+.coverage-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+  min-width: 2px;
+  position: relative;
+}
+.bar-fb { background: linear-gradient(90deg, #3b6fd4, #6c9cf7); }
+.bar-es { background: linear-gradient(90deg, #e67e22, #f39c12); }
+.bar-gl { background: linear-gradient(90deg, #27ae60, #2ecc71); }
+.bar-acc { background: linear-gradient(90deg, #8e44ad, #b86ad4); }
+.coverage-count { font-size: 0.8rem; color: var(--text-light); text-align: right; min-width: 60px; }
+
+.coverage-legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  font-size: 0.8rem;
+}
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 4px;
+}
+
+.overall-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.stat-box {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  text-align: center;
+}
+.stat-num { font-size: 1.8rem; font-weight: 700; color: var(--primary); }
+.stat-label { font-size: 0.78rem; color: var(--text-light); margin-top: 2px; }
+
+/* リセットボタンエリア */
+#reset-area { margin-top: 24px; border-top: 1px solid var(--border); padding-top: 16px; }
+
+/* エラー表示 */
+#error-banner {
+  background: #fde8e8;
+  border: 1.5px solid var(--danger);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin: 20px;
+  color: #8b1c1c;
+  display: none;
+}
+
+/* 空データ */
+.empty-state {
+  text-align: center;
+  padding: 48px 0;
+  color: var(--text-light);
+  font-size: 0.95rem;
+}
+
+/* レスポンシブ */
+@media (max-width: 520px) {
+  #choice-grid { grid-template-columns: 1fr; }
+  .coverage-row { grid-template-columns: 60px 1fr auto; }
+  #app-header h1 { font-size: 0.9rem; }
+  .tab-btn { padding: 6px 10px; font-size: 0.8rem; }
+  .overall-stats { grid-template-columns: 1fr 1fr; }
+}
+
+/* タブコンテンツ */
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* レビュー用モーダル */
+#review-modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: none;
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+#review-modal-content {
+  background: var(--surface);
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+.review-item {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.review-item.correct { border-color: var(--success); background: #f0fdf4; }
+.review-item.wrong { border-color: var(--danger); background: #fef2f2; }
+.review-item.essay-ok { border-color: var(--success); background: #f0fdf4; }
+.review-item.essay-ambig { border-color: var(--warning); background: #fffcf0; }
+.review-item-q { font-weight: bold; margin-bottom: 8px; line-height: 1.5; }
+.review-item-ans { margin-bottom: 4px; font-size: 0.95rem; }
+.review-item-exp { font-size: 0.85rem; color: var(--text-light); margin-top: 8px; }
+
+</style>
+</head>
+<body>
+
+<div id="app-header">
+  <h1>人工知能 確認テスト対策</h1>
+  <div id="tabs">
+    <button class="tab-btn active" data-tab="test">模擬テスト</button>
+    <button class="tab-btn" data-tab="essay">論述</button>
+    <button class="tab-btn" data-tab="glossary">用語集</button>
+    <button class="tab-btn" data-tab="history">履歴</button>
+  </div>
+</div>
+
+<div id="error-banner">
+  <strong>data.js が読み込まれていません。</strong><br>
+  index.html と同じフォルダに <code>data.js</code> を配置してください。<br>
+  <code>window.EXAM</code> オブジェクトが定義されていない場合もこのメッセージが表示されます。
+</div>
+
+<div id="main">
+
+  <!-- ======== 穴埋めタブ ======== -->
+  <div id="panel-fill" class="tab-panel" style="display:none;">
+    <div class="card" id="fill-filter-card">
+      <div id="filter-bar-fill"></div>
+      <div id="fill-controls">
+        <button class="btn btn-outline btn-sm" id="btn-shuffle">シャッフル</button>
+        <button class="btn btn-outline btn-sm" id="btn-review-only">間違いだけ復習</button>
+        <span id="fill-review-count" style="font-size:0.8rem;color:var(--text-light);"></span>
+      </div>
+    </div>
+
+    <div class="card" id="fill-question-card">
+      <div id="fill-progress"></div>
+      <div class="fill-question-text" id="fill-q-text"></div>
+
+      <!-- choice -->
+      <div id="choice-grid"></div>
+
+      <!-- input -->
+      <div id="fill-input-wrap" style="display:none;">
+        <input type="text" id="fill-input" placeholder="答えを入力...">
+        <button class="btn btn-primary" id="btn-fill-submit">確認</button>
+      </div>
+
+      <!-- 結果 -->
+      <div id="fill-result">
+        <div id="fill-result-label"></div>
+        <div id="fill-result-answer"></div>
+        <div id="fill-result-explanation"></div>
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-primary" id="btn-fill-next" style="display:none;">次へ →</button>
+      </div>
+    </div>
+
+    <div id="fill-done" style="display:none;">
+      <div class="card">
+        <p id="fill-done-msg">全問完了しました！</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
+          <button class="btn btn-primary" id="btn-fill-restart">最初からやり直す</button>
+          <button class="btn btn-outline" id="btn-fill-review-done">間違いだけ復習</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======== 論述タブ ======== -->
+  <div id="panel-essay" class="tab-panel">
+    <div class="card" id="essay-filter-card">
+      <div id="filter-bar-essay"></div>
+    </div>
+
+    <div class="card" id="essay-question-card">
+      <div id="essay-progress"></div>
+      <div class="essay-question-text" id="essay-q-text"></div>
+
+      <button class="btn btn-primary" id="btn-show-answer">模範解答を見る</button>
+
+      <div id="essay-answer-area">
+        <div id="essay-model-answer"></div>
+        <div class="key-points-label">採点観点</div>
+        <div id="essay-key-points"></div>
+        <div id="essay-self-eval">
+          <button class="btn btn-success" id="btn-essay-ok">できた</button>
+          <button class="btn btn-warning" id="btn-essay-ambig">曖昧</button>
+        </div>
+        <div id="essay-eval-result"></div>
+      </div>
+
+      <div id="essay-nav">
+        <button class="btn btn-outline" id="btn-essay-prev">← 前へ</button>
+        <button class="btn btn-primary" id="btn-essay-next">次へ →</button>
+      </div>
+    </div>
+
+    <div id="essay-done" style="display:none;">
+      <div class="card">
+        <p style="color:var(--text-light);margin-bottom:12px;">全問確認しました！</p>
+        <button class="btn btn-primary" id="btn-essay-restart">最初からやり直す</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======== 用語集タブ ======== -->
+  <div id="panel-glossary" class="tab-panel">
+    <div class="card">
+      <div id="glossary-search-bar">
+        <input type="text" id="glossary-search" placeholder="用語・読み・定義を検索...">
+      </div>
+      <div id="filter-bar-glossary"></div>
+      <div id="glossary-controls">
+        <span id="glossary-count"></span>
+        <button class="btn btn-outline btn-sm" id="btn-hide-def">定義を隠す</button>
+      </div>
+    </div>
+    <div class="glossary-list" id="glossary-list"></div>
+    <div id="glossary-empty" class="empty-state" style="display:none;">
+      一致する用語が見つかりません。
+    </div>
+  </div>
+
+  
+  <!-- ======== 模擬テストタブ ======== -->
+  <div id="panel-test" class="tab-panel active">
+    <div class="card" id="test-start-card">
+      <h3 style="margin-bottom:8px;">模擬テスト</h3>
+      <p style="margin-bottom:16px; color:var(--text-light); font-size:0.9rem;">全範囲からランダムに【穴埋め50問＋論述5問】が出題されます。<br>毎回異なる問題文（言い換え）で出題されるため、暗記ではなく真の理解度が試されます。</p>
+      <button class="btn btn-primary" id="btn-start-test">テストを開始する</button>
+    </div>
+    
+    <div class="card" id="test-run-card" style="display:none;">
+      <div id="test-progress" style="margin-bottom:12px;color:var(--text-light);font-size:0.85rem;font-weight:bold;"></div>
+      
+      <!-- 穴埋めUI -->
+      <div id="test-run-fill-wrap">
+        <div class="fill-question-text" id="test-q-text"></div>
+        
+        <div id="test-choice-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;"></div>
+        <div id="test-input-wrap" style="display:none;gap:8px;margin-bottom:14px;">
+          <input type="text" id="test-input" placeholder="答えを入力..." style="flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius);">
+          <button class="btn btn-primary" id="btn-test-submit">確認</button>
+        </div>
+        
+        <div id="test-result" style="display:none;padding:14px;border-radius:var(--radius);margin-bottom:14px;">
+          <div id="test-result-label" style="font-weight:bold;margin-bottom:6px;"></div>
+          <div id="test-result-answer"></div>
+          <div id="test-result-explanation" style="color:var(--text-light);font-size:0.88rem;margin-top:4px;"></div>
+        </div>
+      </div>
+
+      <!-- 論述UI -->
+      <div id="test-run-essay-wrap" style="display:none;">
+        <div class="essay-question-text" id="test-essay-q-text" style="font-size:1.1rem;margin-bottom:16px;"></div>
+        <button class="btn btn-primary" id="btn-test-essay-show">模範解答を見る</button>
+        
+        <div id="test-essay-answer-area" style="display:none; margin-top:14px;">
+          <div id="test-essay-model-answer" style="background:#f8f9fb;border-left:4px solid var(--primary);padding:14px;white-space:pre-wrap;margin-bottom:12px;font-size:0.95rem;line-height:1.6;"></div>
+          <div style="font-weight:bold;margin-bottom:8px;">自己評価（できたか曖昧か選択してください）</div>
+          <div id="test-essay-self-eval" style="display:flex;gap:8px;margin-bottom:14px;">
+            <button class="btn btn-success" id="btn-test-essay-ok">できた</button>
+            <button class="btn btn-warning" id="btn-test-essay-ambig">曖昧</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;">
+        <button class="btn btn-primary" id="btn-test-next" style="display:none;">次へ →</button>
+      </div>
+    </div>
+    
+    <div class="card" id="test-end-card" style="display:none;text-align:center;padding:32px 0;">
+      <h3 style="margin-bottom:12px;">テスト完了！</h3>
+      <div id="test-score" style="font-size:2.5rem;color:var(--primary);font-weight:bold;margin-bottom:24px;"></div>
+      <button class="btn btn-primary" id="btn-test-finish">履歴を見る</button>
+    </div>
+  </div>
+
+  <!-- ======== 履歴タブ ======== -->
+  <div id="panel-history" class="tab-panel">
+    <div class="card">
+      <h3 style="margin-bottom: 16px;">過去のテスト履歴</h3>
+      <div id="history-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+      
+      <div id="reset-area" style="margin-top:32px;border-top:1px solid var(--border);padding-top:16px;">
+        <button class="btn btn-danger btn-sm" id="btn-reset-progress">データ全削除</button>
+        <span style="font-size:0.8rem;color:var(--text-light);margin-left:8px;">履歴や間違えた問題リストをリセット</span>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /#main -->
+
+<script src="data.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  /* ─────────────────────────────────
+     0. ガード & データ正規化
+  ───────────────────────────────── */
+  var E = window.EXAM;
+  var hasData = E && typeof E === 'object';
+
+  if (!hasData) {
+    document.getElementById('error-banner').style.display = 'block';
+    // tabs still renderable but show empty states
+  }
+
+  var lectures  = (hasData && Array.isArray(E.lectures))  ? E.lectures  : [];
+  var glossary  = (hasData && Array.isArray(E.glossary))  ? E.glossary  : [];
+  var questions = (hasData && E.questions && typeof E.questions === 'object') ? E.questions : {};
+  var fillAll   = Array.isArray(questions.fill_blank) ? questions.fill_blank : [];
+  var essayAll  = Array.isArray(questions.essay)      ? questions.essay      : [];
+
+  /* ─────────────────────────────────
+     1. localStorage ユーティリティ
+  ───────────────────────────────── */
+  var LS_PREFIX = 'aiexam_';
+
+  function lsGet(key, def) {
+    try {
+      var v = localStorage.getItem(LS_PREFIX + key);
+      return v === null ? def : JSON.parse(v);
+    } catch(e) { return def; }
+  }
+  function lsSet(key, val) {
+    try { localStorage.setItem(LS_PREFIX + key, JSON.stringify(val)); } catch(e) {}
+  }
+
+  // wrong set: Set of question ids
+  function getWrongSet() { return new Set(lsGet('wrong_ids', [])); }
+  function addWrong(id)  { var s = getWrongSet(); s.add(id); lsSet('wrong_ids', Array.from(s)); }
+  function rmWrong(id)   { var s = getWrongSet(); s.delete(id); lsSet('wrong_ids', Array.from(s)); }
+
+  // fill results: {id: true/false}
+  function getFillResults() { return lsGet('fill_results', {}); }
+  function setFillResult(id, correct) {
+    var r = getFillResults(); r[id] = correct; lsSet('fill_results', r);
+  }
+
+  // essay self-eval: {id: 'ok'|'ambig'}
+  function getEssayEvals() { return lsGet('essay_evals', {}); }
+  function setEssayEval(id, val) {
+    var ev = getEssayEvals(); ev[id] = val; lsSet('essay_evals', ev);
+  }
+
+  function resetAll() {
+    try {
+      var keys = Object.keys(localStorage);
+      keys.forEach(function(k){ if(k.indexOf(LS_PREFIX) === 0) localStorage.removeItem(k); });
+    } catch(e) {}
+  }
+
+  /* ─────────────────────────────────
+     2. タブ切替
+  ───────────────────────────────── */
+  var tabBtns   = document.querySelectorAll('.tab-btn');
+  var tabPanels = { fill: document.getElementById('panel-fill'), essay: document.getElementById('panel-essay'), test: document.getElementById('panel-test'), glossary: document.getElementById('panel-glossary'), history: document.getElementById('panel-history') };
+
+  tabBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      tabBtns.forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      var target = btn.dataset.tab;
+      Object.keys(tabPanels).forEach(function(k){ tabPanels[k].classList.remove('active'); });
+      tabPanels[target].classList.add('active');
+      if (target === 'test') { document.getElementById('panel-fill').classList.remove('active'); }
+      if (target === 'history') renderHistory();
+      if (target === 'glossary') renderGlossary();
+    });
+  });
+
+  /* ─────────────────────────────────
+     3. 回フィルタ ユーティリティ
+  ───────────────────────────────── */
+  function buildLecIds() {
+    var ids = new Set();
+    fillAll.forEach(function(q){ if(q.lecture_id) ids.add(q.lecture_id); });
+    essayAll.forEach(function(q){ if(q.lecture_id) ids.add(q.lecture_id); });
+    glossary.forEach(function(g){ if(g.lecture_id) ids.add(g.lecture_id); });
+    lectures.forEach(function(l){ if(l.id) ids.add(l.id); });
+    return Array.from(ids).sort();
+  }
+  var lecIds = buildLecIds();
+
+  function renderFilterBar(containerId, state, onChange) {
+    var el = document.getElementById(containerId);
+    if (!el) return;
+    el.innerHTML = '';
+    var label = document.createElement('label');
+    label.textContent = '回:';
+    el.appendChild(label);
+
+    var allBtn = makeFilterBtn('全て', state.lec === 'all', function() { state.lec = 'all'; refreshButtons(); onChange(); });
+    el.appendChild(allBtn);
+
+    lecIds.forEach(function(id) {
+      var btn = makeFilterBtn(id.replace('lec','L'), state.lec === id, function(){ state.lec = id; refreshButtons(); onChange(); });
+      btn._lecId = id;
+      el.appendChild(btn);
+    });
+
+    function refreshButtons() {
+      var btns = el.querySelectorAll('.lec-btn');
+      btns.forEach(function(b){
+        var isAll = !b._lecId;
+        b.classList.toggle('active', isAll ? state.lec === 'all' : b._lecId === state.lec);
+      });
+    }
+  }
+
+  function makeFilterBtn(label, isActive, handler) {
+    var btn = document.createElement('button');
+    btn.className = 'lec-btn' + (isActive ? ' active' : '');
+    btn.textContent = label;
+    btn.addEventListener('click', handler);
+    return btn;
+  }
+
+  function filterByLec(arr, lec) {
+    if (lec === 'all') return arr;
+    return arr.filter(function(q){ return q.lecture_id === lec; });
+  }
+
+  /* ─────────────────────────────────
+     4. 穴埋めタブ
+  ───────────────────────────────── */
+  var fillState = {
+    lec: 'all',
+    queue: [],
+    idx: 0,
+    answered: false,
+    reviewOnly: false,
+    shuffled: false
+  };
+
+  renderFilterBar('filter-bar-fill', fillState, function(){ initFill(); });
+
+  function norm(s) { return String(s).toLowerCase().replace(/\s/g, ''); }
+
+  function buildFillQueue() {
+    var pool = filterByLec(fillAll, fillState.lec);
+    if (fillState.reviewOnly) {
+      var ws = getWrongSet();
+      pool = pool.filter(function(q){ return ws.has(q.id); });
+    }
+    if (fillState.shuffled) {
+      pool = pool.slice().sort(function(){ return Math.random() - 0.5; });
+    }
+    return pool;
+  }
+
+  function initFill() {
+    fillState.queue = buildFillQueue();
+    fillState.idx   = 0;
+    fillState.answered = false;
+    document.getElementById('fill-done').style.display = 'none';
+    document.getElementById('fill-question-card').style.display = '';
+    updateReviewCount();
+    renderFillQuestion();
+  }
+
+  function updateReviewCount() {
+    var ws = getWrongSet();
+    var inFilter = filterByLec(fillAll, fillState.lec);
+    var cnt = inFilter.filter(function(q){ return ws.has(q.id); }).length;
+    document.getElementById('fill-review-count').textContent = cnt > 0 ? ('間違い: ' + cnt + '問') : '';
+  }
+
+  function renderFillQuestion() {
+    var q = fillState.queue[fillState.idx];
+    if (!q) { showFillDone(); return; }
+
+    var total = fillState.queue.length;
+    var prog = document.getElementById('fill-progress');
+    prog.textContent = (fillState.idx + 1) + ' / ' + total + '問';
+
+    // テキスト（____を<span>化）
+    var textEl = document.getElementById('fill-q-text');
+    var qText = (q.texts && q.texts.length > 0) ? q.texts[Math.floor(Math.random() * q.texts.length)] : (q.text || '');
+    textEl.innerHTML = escapeHtml(qText).replace(/____/g, '<span class="blank">　　　　</span>');
+
+    // リセット結果・次へ
+    var res = document.getElementById('fill-result');
+    res.style.display = 'none'; res.className = '';
+    document.getElementById('btn-fill-next').style.display = 'none';
+    fillState.answered = false;
+
+    // choice / input 切替
+    var grid = document.getElementById('choice-grid');
+    var inputWrap = document.getElementById('fill-input-wrap');
+    var inp = document.getElementById('fill-input');
+
+    if (q.mode === 'input') {
+      grid.style.display = 'none';
+      inputWrap.style.display = '';
+      inp.value = '';
+      inp.className = '';
+      inp.disabled = false;
+      inp.focus();
+    } else {
+      // choice（デフォルト）
+      inputWrap.style.display = 'none';
+      grid.style.display = '';
+      grid.innerHTML = '';
+      var choices = Array.isArray(q.choices) ? q.choices.slice() : [q.answer];
+      // シャッフル選択肢
+      choices = choices.sort(function(){ return Math.random() - 0.5; });
+      choices.forEach(function(c) {
+        var btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.textContent = c;
+        btn.addEventListener('click', function(){ onChoiceClick(c, q); });
+        grid.appendChild(btn);
+      });
+    }
+  }
+
+  function onChoiceClick(chosen, q) {
+    if (fillState.answered) return;
+    fillState.answered = true;
+    var correct = (norm(chosen) === norm(q.answer));
+    if (!correct) addWrong(q.id); else { rmWrong(q.id); }
+    setFillResult(q.id, correct);
+
+    // ボタン色分け
+    var btns = document.getElementById('choice-grid').querySelectorAll('.choice-btn');
+    btns.forEach(function(b){
+      b.disabled = true;
+      if (norm(b.textContent) === norm(q.answer)) b.classList.add('correct');
+      else if (norm(b.textContent) === norm(chosen) && !correct) b.classList.add('wrong');
+    });
+    showFillResult(correct, q);
+  }
+
+  document.getElementById('btn-fill-submit').addEventListener('click', function(){ onInputSubmit(); });
+  document.getElementById('fill-input').addEventListener('keydown', function(e){ if(e.key === 'Enter') onInputSubmit(); });
+
+  function onInputSubmit() {
+    if (fillState.answered) return;
+    var q = fillState.queue[fillState.idx];
+    if (!q) return;
+    var inp = document.getElementById('fill-input');
+    var val = norm(inp.value);
+    if (!val) return;
+    fillState.answered = true;
+
+    var accepts = Array.isArray(q.accept) ? q.accept : [q.answer];
+    var correct = accepts.some(function(a){ return norm(a) === val; });
+    if (!correct) addWrong(q.id); else { rmWrong(q.id); }
+    setFillResult(q.id, correct);
+
+    inp.disabled = true;
+    inp.className = correct ? 'correct' : 'wrong';
+    showFillResult(correct, q);
+  }
+
+  function showFillResult(correct, q) {
+    var res = document.getElementById('fill-result');
+    res.style.display = 'block';
+    res.className = correct ? 'correct' : 'wrong';
+    document.getElementById('fill-result-label').textContent = correct ? '正解！' : '不正解';
+    document.getElementById('fill-result-answer').textContent = '正解: ' + (q.answer || '');
+    document.getElementById('fill-result-explanation').textContent = q.explanation ? ('解説: ' + q.explanation) : '';
+    document.getElementById('btn-fill-next').style.display = '';
+    updateReviewCount();
+  }
+
+  document.getElementById('btn-fill-next').addEventListener('click', function(){
+    fillState.idx++;
+    renderFillQuestion();
+  });
+
+  document.getElementById('btn-shuffle').addEventListener('click', function(){
+    fillState.shuffled = !fillState.shuffled;
+    this.classList.toggle('btn-primary', fillState.shuffled);
+    this.classList.toggle('btn-outline', !fillState.shuffled);
+    initFill();
+  });
+
+  document.getElementById('btn-review-only').addEventListener('click', function(){
+    fillState.reviewOnly = !fillState.reviewOnly;
+    this.classList.toggle('btn-primary', fillState.reviewOnly);
+    this.classList.toggle('btn-outline', !fillState.reviewOnly);
+    initFill();
+  });
+
+  function showFillDone() {
+    document.getElementById('fill-question-card').style.display = 'none';
+    var done = document.getElementById('fill-done');
+    done.style.display = '';
+    var ws = getWrongSet();
+    var inFilter = filterByLec(fillAll, fillState.lec);
+    var wrongCnt = inFilter.filter(function(q){ return ws.has(q.id); }).length;
+    var msg = '全 ' + fillState.queue.length + ' 問完了！';
+    if (wrongCnt > 0) msg += ' 間違い: ' + wrongCnt + '問';
+    document.getElementById('fill-done-msg').textContent = msg;
+
+    var revBtn = document.getElementById('btn-fill-review-done');
+    revBtn.style.display = wrongCnt > 0 ? '' : 'none';
+  }
+
+  document.getElementById('btn-fill-restart').addEventListener('click', function(){
+    fillState.reviewOnly = false;
+    document.getElementById('btn-review-only').classList.remove('btn-primary');
+    document.getElementById('btn-review-only').classList.add('btn-outline');
+    initFill();
+  });
+
+  document.getElementById('btn-fill-review-done').addEventListener('click', function(){
+    fillState.reviewOnly = true;
+    document.getElementById('btn-review-only').classList.add('btn-primary');
+    document.getElementById('btn-review-only').classList.remove('btn-outline');
+    initFill();
+  });
+
+  initFill();
+
+  /* ─────────────────────────────────
+     5. 論述タブ
+  ───────────────────────────────── */
+  var essayState = { lec: 'all', queue: [], idx: 0 };
+
+  renderFilterBar('filter-bar-essay', essayState, function(){ initEssay(); });
+
+  function initEssay() {
+    essayState.queue = filterByLec(essayAll, essayState.lec);
+    essayState.idx   = 0;
+    document.getElementById('essay-done').style.display = 'none';
+    document.getElementById('essay-question-card').style.display = '';
+    renderEssayQuestion();
+  }
+
+  function renderEssayQuestion() {
+    var q = essayState.queue[essayState.idx];
+    if (!q) { showEssayDone(); return; }
+
+    var total = essayState.queue.length;
+    document.getElementById('essay-progress').textContent = (essayState.idx + 1) + ' / ' + total + '問';
+    var qText = (q.texts && q.texts.length > 0) ? q.texts[Math.floor(Math.random() * q.texts.length)] : (q.question || '');
+    document.getElementById('essay-q-text').textContent = qText;
+
+    // 解答エリアを隠す
+    var aa = document.getElementById('essay-answer-area');
+    aa.style.display = 'none';
+    document.getElementById('btn-show-answer').style.display = '';
+
+    // 評価結果表示
+    var ev = getEssayEvals();
+    var saved = ev[q.id];
+    var evalRes = document.getElementById('essay-eval-result');
+    evalRes.textContent = saved ? ('前回の自己評価: ' + (saved === 'ok' ? 'できた' : '曖昧')) : '';
+
+    // prev/next
+    document.getElementById('btn-essay-prev').disabled = essayState.idx === 0;
+  }
+
+  document.getElementById('btn-show-answer').addEventListener('click', function(){
+    var q = essayState.queue[essayState.idx];
+    if (!q) return;
+    this.style.display = 'none';
+    var aa = document.getElementById('essay-answer-area');
+    aa.style.display = 'block';
+    document.getElementById('essay-model-answer').textContent = q.model_answer || '';
+
+    var kp = document.getElementById('essay-key-points');
+    kp.innerHTML = '';
+    var points = Array.isArray(q.key_points) ? q.key_points : [];
+    points.forEach(function(p, i) {
+      var div = document.createElement('div');
+      div.className = 'key-point-item';
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.id = 'kp_' + i;
+      var lbl = document.createElement('label');
+      lbl.htmlFor = 'kp_' + i;
+      lbl.textContent = p;
+      div.appendChild(cb);
+      div.appendChild(lbl);
+      kp.appendChild(div);
+    });
+
+    document.getElementById('essay-eval-result').textContent = '';
+  });
+
+  document.getElementById('btn-essay-ok').addEventListener('click', function(){
+    var q = essayState.queue[essayState.idx];
+    if (!q) return;
+    setEssayEval(q.id, 'ok');
+    document.getElementById('essay-eval-result').textContent = '記録: できた';
+  });
+
+  document.getElementById('btn-essay-ambig').addEventListener('click', function(){
+    var q = essayState.queue[essayState.idx];
+    if (!q) return;
+    setEssayEval(q.id, 'ambig');
+    document.getElementById('essay-eval-result').textContent = '記録: 曖昧';
+  });
+
+  document.getElementById('btn-essay-next').addEventListener('click', function(){
+    essayState.idx++;
+    renderEssayQuestion();
+  });
+
+  document.getElementById('btn-essay-prev').addEventListener('click', function(){
+    if (essayState.idx > 0) { essayState.idx--; renderEssayQuestion(); }
+  });
+
+  document.getElementById('btn-essay-restart').addEventListener('click', function(){
+    initEssay();
+  });
+
+  function showEssayDone() {
+    document.getElementById('essay-question-card').style.display = 'none';
+    document.getElementById('essay-done').style.display = '';
+  }
+
+  initEssay();
+
+  /* ─────────────────────────────────
+     6. 用語集タブ
+  ───────────────────────────────── */
+  var glossState = { lec: 'all', search: '', hideAll: false };
+
+  renderFilterBar('filter-bar-glossary', glossState, renderGlossary);
+
+  document.getElementById('glossary-search').addEventListener('input', function(){
+    glossState.search = this.value;
+    renderGlossary();
+  });
+
+  document.getElementById('btn-hide-def').addEventListener('click', function(){
+    glossState.hideAll = !glossState.hideAll;
+    this.textContent = glossState.hideAll ? '定義を表示' : '定義を隠す';
+    this.classList.toggle('btn-primary', glossState.hideAll);
+    this.classList.toggle('btn-outline', !glossState.hideAll);
+    renderGlossary();
+  });
+
+  function renderGlossary() {
+    var items = filterByLec(glossary, glossState.lec);
+    var q = glossState.search.trim().toLowerCase();
+    if (q) {
+      items = items.filter(function(g){
+        return (g.term   || '').toLowerCase().includes(q) ||
+               (g.reading|| '').toLowerCase().includes(q) ||
+               (g.definition||'').toLowerCase().includes(q);
+      });
+    }
+
+    var list = document.getElementById('glossary-list');
+    var empty = document.getElementById('glossary-empty');
+    list.innerHTML = '';
+
+    document.getElementById('glossary-count').textContent = items.length + ' 件';
+
+    if (items.length === 0) { empty.style.display = ''; return; }
+    empty.style.display = 'none';
+
+    items.forEach(function(g) {
+      var card = document.createElement('div');
+      card.className = 'glossary-card';
+
+      var term = document.createElement('div');
+      term.className = 'glossary-term';
+      term.textContent = g.term || '';
+      card.appendChild(term);
+
+      if (g.reading) {
+        var reading = document.createElement('div');
+        reading.className = 'glossary-reading';
+        reading.textContent = g.reading;
+        card.appendChild(reading);
+      }
+
+      var defWrap = document.createElement('div');
+      defWrap.className = 'glossary-def-wrap';
+
+      if (glossState.hideAll) {
+        var hidden = document.createElement('div');
+        hidden.className = 'glossary-def-hidden';
+        hidden.textContent = g.definition || '';
+        hidden.title = 'クリックで表示';
+        hidden.addEventListener('click', function(){
+          this.classList.toggle('revealed');
+        });
+        defWrap.appendChild(hidden);
+      } else {
+        var def = document.createElement('div');
+        def.className = 'glossary-def';
+        def.textContent = g.definition || '';
+        defWrap.appendChild(def);
+      }
+      card.appendChild(defWrap);
+
+      if (g.lecture_id) {
+        var tag = document.createElement('span');
+        tag.className = 'glossary-lec-tag';
+        tag.textContent = g.lecture_id;
+        card.appendChild(tag);
+      }
+
+      list.appendChild(card);
+    });
+  }
+
+  renderGlossary();
+
+  /* ─────────────────────────────────
+     7. カバレッジタブ
+  ───────────────────────────────── */
+  function renderCoverage() {
+    // 集計
+    var fbResults = getFillResults();
+    var essayEvals = getEssayEvals();
+
+    // lecId → {fb, es, gl, fbCorrect, fbTotal}
+    var byLec = {};
+    function ensureLec(id) {
+      if (!byLec[id]) byLec[id] = { fb:0, es:0, gl:0, fbCorrect:0, fbAnswered:0 };
+    }
+    lecIds.forEach(function(id){ ensureLec(id); });
+
+    fillAll.forEach(function(q){
+      var id = q.lecture_id || 'unknown';
+      ensureLec(id);
+      byLec[id].fb++;
+      if (fbResults[q.id] !== undefined) {
+        byLec[id].fbAnswered++;
+        if (fbResults[q.id]) byLec[id].fbCorrect++;
+      }
+    });
+    essayAll.forEach(function(q){
+      var id = q.lecture_id || 'unknown';
+      ensureLec(id);
+      byLec[id].es++;
+    });
+    glossary.forEach(function(g){
+      var id = g.lecture_id || 'unknown';
+      ensureLec(id);
+      byLec[id].gl++;
+    });
+
+    // 全体統計
+    var totalFb = fillAll.length;
+    var totalEs = essayAll.length;
+    var totalGl = glossary.length;
+    var answeredFb = Object.keys(fbResults).length;
+    var correctFb  = Object.values(fbResults).filter(Boolean).length;
+    var evaluatedEs = Object.keys(essayEvals).length;
+    var doneEs = Object.values(essayEvals).filter(function(v){ return v === 'ok'; }).length;
+
+    var overallEl = document.getElementById('coverage-overall');
+    overallEl.innerHTML = '';
+    function statBox(num, label) {
+      var d = document.createElement('div'); d.className = 'stat-box';
+      var n = document.createElement('div'); n.className = 'stat-num'; n.textContent = num;
+      var l = document.createElement('div'); l.className = 'stat-label'; l.textContent = label;
+      d.appendChild(n); d.appendChild(l);
+      return d;
+    }
+    overallEl.appendChild(statBox(totalFb, '穴埋め問題数'));
+    overallEl.appendChild(statBox(totalEs, '論述問題数'));
+    overallEl.appendChild(statBox(totalGl, '用語数'));
+    overallEl.appendChild(statBox(answeredFb + '/' + totalFb, '穴埋め解答済'));
+    var accPct = answeredFb > 0 ? Math.round(correctFb / answeredFb * 100) : 0;
+    overallEl.appendChild(statBox(accPct + '%', '穴埋め正答率'));
+    overallEl.appendChild(statBox(doneEs + '/' + totalEs, '論述「できた」'));
+
+    // 最大値を計算（バー幅スケール用）
+    var maxCount = 1;
+    Object.values(byLec).forEach(function(v){ maxCount = Math.max(maxCount, v.fb + v.es + v.gl); });
+
+    var countBarsEl = document.getElementById('coverage-bars-count');
+    countBarsEl.innerHTML = '';
+    var accBarsEl = document.getElementById('coverage-bars-acc');
+    accBarsEl.innerHTML = '';
+
+    Object.keys(byLec).sort().forEach(function(lecId){
+      var v = byLec[lecId];
+      var total = v.fb + v.es + v.gl;
+      if (total === 0) return;
+
+      var pct = Math.round(total / maxCount * 100);
+
+      // 問題数バー (積み上げ風に分割)
+      var row = document.createElement('div');
+      row.className = 'coverage-row';
+
+      var lbl = document.createElement('div');
+      lbl.className = 'coverage-lec-label';
+      lbl.textContent = lecId.replace('lec', 'L');
+      row.appendChild(lbl);
+
+      var barWrap = document.createElement('div');
+      barWrap.className = 'coverage-bar-wrap';
+
+      // 穴埋めバー
+      var fbPct = Math.round(v.fb / maxCount * 100);
+      if (fbPct > 0) {
+        var bfb = document.createElement('div');
+        bfb.className = 'coverage-bar bar-fb';
+        bfb.style.width = fbPct + '%';
+        bfb.style.position = 'absolute'; bfb.style.left = '0'; bfb.style.top = '0';
+        barWrap.appendChild(bfb);
+      }
+      // 論述バー（穴埋め右隣）
+      var esPct = Math.round(v.es / maxCount * 100);
+      if (esPct > 0) {
+        var bes = document.createElement('div');
+        bes.className = 'coverage-bar bar-es';
+        bes.style.width = esPct + '%';
+        bes.style.position = 'absolute'; bes.style.left = fbPct + '%'; bes.style.top = '0';
+        barWrap.appendChild(bes);
+      }
+      // 用語バー
+      var glPct = Math.round(v.gl / maxCount * 100);
+      if (glPct > 0) {
+        var bgl = document.createElement('div');
+        bgl.className = 'coverage-bar bar-gl';
+        bgl.style.width = glPct + '%';
+        bgl.style.position = 'absolute'; bgl.style.left = (fbPct + esPct) + '%'; bgl.style.top = '0';
+        barWrap.appendChild(bgl);
+      }
+
+      row.appendChild(barWrap);
+
+      var cnt = document.createElement('div');
+      cnt.className = 'coverage-count';
+      cnt.textContent = '穴' + v.fb + ' 論' + v.es + ' 語' + v.gl;
+      row.appendChild(cnt);
+
+      countBarsEl.appendChild(row);
+
+      // 正答率バー
+      var accRow = document.createElement('div');
+      accRow.className = 'coverage-row';
+
+      var accLbl = document.createElement('div');
+      accLbl.className = 'coverage-lec-label';
+      accLbl.textContent = lecId.replace('lec', 'L');
+      accRow.appendChild(accLbl);
+
+      var accBarWrap = document.createElement('div');
+      accBarWrap.className = 'coverage-bar-wrap';
+
+      var accPctLec = v.fbAnswered > 0 ? Math.round(v.fbCorrect / v.fbAnswered * 100) : 0;
+      var abar = document.createElement('div');
+      abar.className = 'coverage-bar bar-acc';
+      abar.style.width = accPctLec + '%';
+      accBarWrap.appendChild(abar);
+      accRow.appendChild(accBarWrap);
+
+      var accCnt = document.createElement('div');
+      accCnt.className = 'coverage-count';
+      accCnt.textContent = v.fbAnswered > 0 ? (accPctLec + '% (' + v.fbCorrect + '/' + v.fbAnswered + ')') : '未解答';
+      accRow.appendChild(accCnt);
+
+      accBarsEl.appendChild(accRow);
+    });
+
+    if (Object.keys(byLec).length === 0) {
+      countBarsEl.innerHTML = '<div class="empty-state">データなし</div>';
+      accBarsEl.innerHTML = '<div class="empty-state">データなし</div>';
+    }
+  }
+
+  /* ─────────────────────────────────
+     8. 進捗リセット
+  ───────────────────────────────── */
+  document.getElementById('btn-reset-progress').addEventListener('click', function(){
+    if (!confirm('進捗データをすべてリセットしますか？')) return;
+    resetAll();
+    initFill();
+    initEssay();
+    renderHistory();
+    alert('リセットしました。');
+  });
+  
+  /* ─────────────────────────────────
+     9. ユーティリティ
+  ───────────────────────────────── */
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+  }
+
+
+  /* ─────────────────────────────────
+     10. 模擬テスト & 履歴ロジック
+  ───────────────────────────────── */
+  var testState = {
+    questions: [],
+    idx: 0,
+    score: 0,
+    answered: false
+  };
+
+  function getTestHistory() { return lsGet('test_history', []); }
+  function addTestHistory(record) {
+    var h = getTestHistory();
+    h.unshift(record);
+    lsSet('test_history', h);
+  }
+
+  // ランダムにテキストを取得する関数
+  function getQuestionText(q) {
+    if (q.texts && q.texts.length > 0) {
+      return q.texts[Math.floor(Math.random() * q.texts.length)];
+    }
+    return q.text || q.question || '';
+  }
+
+  document.getElementById('btn-start-test').addEventListener('click', function(){
+    // 穴埋め問題からランダムに10問選択
+    var pool = fillAll.slice().sort(function(){ return Math.random() - 0.5; });
+    testState.questions = pool.slice(0, 10);
+    testState.idx = 0;
+    testState.score = 0;
+    
+    document.getElementById('test-start-card').style.display = 'none';
+    document.getElementById('test-end-card').style.display = 'none';
+    document.getElementById('test-run-card').style.display = 'block';
+    
+    renderTestQuestion();
+  });
+
+  function renderTestQuestion() {
+    var q = testState.questions[testState.idx];
+    if (!q) { finishTest(); return; }
+    
+    testState.answered = false;
+    document.getElementById('test-progress').textContent = '第 ' + (testState.idx + 1) + ' 問 / 全 ' + testState.questions.length + ' 問';
+    
+    // ランダムテキスト適用
+    var qText = getQuestionText(q);
+    document.getElementById('test-q-text').innerHTML = escapeHtml(qText).replace(/____/g, '<span class="blank">　　　　</span>');
+    
+    var res = document.getElementById('test-result');
+    res.style.display = 'none';
+    res.className = '';
+    document.getElementById('btn-test-next').style.display = 'none';
+    
+    var grid = document.getElementById('test-choice-grid');
+    var inputWrap = document.getElementById('test-input-wrap');
+    var inp = document.getElementById('test-input');
+    
+    if (q.mode === 'input') {
+      grid.style.display = 'none';
+      inputWrap.style.display = 'flex';
+      inp.value = '';
+      inp.className = '';
+      inp.disabled = false;
+      inp.focus();
+    } else {
+      inputWrap.style.display = 'none';
+      grid.style.display = 'grid';
+      grid.innerHTML = '';
+      var choices = Array.isArray(q.choices) ? q.choices.slice() : [q.answer];
+      choices = choices.sort(function(){ return Math.random() - 0.5; });
+      choices.forEach(function(c) {
+        var btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.textContent = c;
+        btn.addEventListener('click', function(){ onTestChoiceClick(c, q, btn); });
+        grid.appendChild(btn);
+      });
+    }
+  }
+
+  function onTestChoiceClick(chosen, q, btnClicked) {
+    if (testState.answered) return;
+    testState.answered = true;
+    var correct = (norm(chosen) === norm(q.answer));
+    if (correct) testState.score++;
+    
+    var btns = document.getElementById('test-choice-grid').querySelectorAll('.choice-btn');
+    btns.forEach(function(b){
+      b.disabled = true;
+      if (norm(b.textContent) === norm(q.answer)) b.classList.add('correct');
+      else if (norm(b.textContent) === norm(chosen) && !correct) b.classList.add('wrong');
+    });
+    showTestResult(correct, q);
+  }
+
+  document.getElementById('btn-test-submit').addEventListener('click', onTestInputSubmit);
+  document.getElementById('test-input').addEventListener('keydown', function(e){ if(e.key==='Enter') onTestInputSubmit(); });
+
+  function onTestInputSubmit() {
+    if (testState.answered) return;
+    var q = testState.questions[testState.idx];
+    var inp = document.getElementById('test-input');
+    var val = norm(inp.value);
+    if (!val) return;
+    testState.answered = true;
+    
+    var accepts = Array.isArray(q.accept) ? q.accept : [q.answer];
+    var correct = accepts.some(function(a){ return norm(a) === val; });
+    if (correct) testState.score++;
+    
+    inp.disabled = true;
+    inp.className = correct ? 'correct' : 'wrong';
+    showTestResult(correct, q);
+  }
+
+  function showTestResult(correct, q) {
+    var res = document.getElementById('test-result');
+    res.style.display = 'block';
+    res.style.backgroundColor = correct ? '#d4f5e2' : '#fde8e8';
+    res.style.borderLeft = '4px solid ' + (correct ? 'var(--success)' : 'var(--danger)');
+    
+    document.getElementById('test-result-label').textContent = correct ? '正解！' : '不正解';
+    document.getElementById('test-result-label').style.color = correct ? 'var(--success)' : 'var(--danger)';
+    
+    document.getElementById('test-result-answer').textContent = '正解: ' + (q.answer || '');
+    document.getElementById('test-result-explanation').textContent = q.explanation ? ('解説: ' + q.explanation) : '';
+    document.getElementById('btn-test-next').style.display = 'block';
+  }
+
+  document.getElementById('btn-test-next').addEventListener('click', function(){
+    testState.idx++;
+    renderTestQuestion();
+  });
+
+  function finishTest() {
+    document.getElementById('test-run-card').style.display = 'none';
+    document.getElementById('test-end-card').style.display = 'block';
+    
+    var scorePct = Math.round(testState.score / testState.questions.length * 100);
+    document.getElementById('test-score').textContent = testState.score + ' / ' + testState.questions.length + ' (' + scorePct + '%)';
+    
+    // 保存
+    var now = new Date();
+    addTestHistory({
+      date: now.toLocaleString(),
+      score: testState.score,
+      total: testState.questions.length,
+      pct: scorePct
+    });
+  }
+
+  document.getElementById('btn-test-finish').addEventListener('click', function(){
+    document.querySelector('.tab-btn[data-tab="history"]').click();
+  });
+
+  function renderHistory() {
+    var listEl = document.getElementById('history-list');
+    listEl.innerHTML = '';
+    var h = getTestHistory();
+    if (h.length === 0) {
+      listEl.innerHTML = '<div class="empty-state">まだテスト履歴がありません。</div>';
+      return;
+    }
+    h.forEach(function(r) {
+      var card = document.createElement('div');
+      card.style.border = '1.5px solid var(--border)';
+      card.style.borderRadius = 'var(--radius)';
+      card.style.padding = '12px 16px';
+      card.style.display = 'flex';
+      card.style.justifyContent = 'space-between';
+      card.style.alignItems = 'center';
+      
+      var left = document.createElement('div');
+      var dateEl = document.createElement('div');
+      dateEl.style.fontSize = '0.85rem';
+      dateEl.style.color = 'var(--text-light)';
+      dateEl.textContent = r.date;
+      var scoreEl = document.createElement('div');
+      scoreEl.style.fontWeight = 'bold';
+      scoreEl.style.fontSize = '1.1rem';
+      scoreEl.textContent = '正答率: ' + r.pct + '% (' + r.score + '/' + r.total + ')';
+      
+      left.appendChild(dateEl);
+      left.appendChild(scoreEl);
+      card.appendChild(left);
+      listEl.appendChild(card);
+    });
+  }
+
+})();
+</script>
+
+<div id="review-modal">
+  <div id="review-modal-content">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
+      <h3 id="review-modal-title">テスト振り返り</h3>
+      <button class="btn btn-outline btn-sm" id="btn-close-review">閉じる</button>
+    </div>
+    <div id="review-modal-list"></div>
+  </div>
+</div>
+
+</body>
+</html>
