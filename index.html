@@ -660,6 +660,17 @@ body {
 
 </div><!-- /#main -->
 
+<!-- ======== 振り返りモーダル ======== -->
+<div id="review-modal">
+  <div id="review-modal-content">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3 id="review-modal-title" style="font-size:1rem;font-weight:700;"></h3>
+      <button class="btn btn-outline btn-sm" id="btn-close-review">✕ 閉じる</button>
+    </div>
+    <div id="review-modal-list"></div>
+  </div>
+</div>
+
 <script src="data.js"></script>
 <script>
 (function () {
@@ -1384,16 +1395,52 @@ body {
     return q.text || q.question || '';
   }
 
+  // 講義別バランス選択（最近使った問題を後回し）
+  function selectBalanced(pool, n) {
+    if (pool.length <= n) return pool.slice().sort(function(){ return Math.random()-0.5; });
+    var recentIds = new Set(lsGet('recent_q_ids', []));
+    var byLec = {};
+    pool.forEach(function(q){
+      var lid = q.lecture_id || 'other';
+      if (!byLec[lid]) byLec[lid] = {u:[], r:[]};
+      (recentIds.has(q.id) ? byLec[lid].r : byLec[lid].u).push(q);
+    });
+    var lecs = Object.keys(byLec).sort();
+    lecs.forEach(function(l){
+      byLec[l].u = byLec[l].u.sort(function(){ return Math.random()-0.5; });
+      byLec[l].r = byLec[l].r.sort(function(){ return Math.random()-0.5; });
+    });
+    var selected = [];
+    ['u','r'].forEach(function(phase){
+      var moved = true;
+      while (moved && selected.length < n) {
+        moved = false;
+        lecs.forEach(function(l){
+          if (selected.length < n && byLec[l][phase].length > 0) {
+            selected.push(byLec[l][phase].shift());
+            moved = true;
+          }
+        });
+      }
+    });
+    return selected.sort(function(){ return Math.random()-0.5; });
+  }
+
   document.getElementById('btn-start-test').addEventListener('click', function(){
-    var poolFill = fillAll.slice().sort(function(){ return Math.random() - 0.5; });
-    var poolEssay = essayAll.slice().sort(function(){ return Math.random() - 0.5; });
-    
-    var selectedFill = poolFill.slice(0, 50).map(function(q){ return Object.assign({}, q, {type: 'fill'}); });
-    var selectedEssay = poolEssay.slice(0, 5).map(function(q){ return Object.assign({}, q, {type: 'essay'}); });
-    
+    var rawFill  = selectBalanced(fillAll, 50);
+    var rawEssay = selectBalanced(essayAll, 5);
+
+    // 後半15問（index 35-49）はinput強制で記述力を試す
+    var selectedFill = rawFill.map(function(q, i){
+      var qq = Object.assign({}, q, {type:'fill'});
+      if (i >= 35) qq.mode = 'input';
+      return qq;
+    });
+    var selectedEssay = rawEssay.map(function(q){ return Object.assign({}, q, {type:'essay'}); });
+
     testState.questions = selectedFill.concat(selectedEssay);
     testState.idx = 0;
-    testState.score = 0; // 穴埋めのスコアのみ
+    testState.score = 0;
     testState.fillTotal = selectedFill.length;
     
     document.getElementById('test-start-card').style.display = 'none';
@@ -1545,11 +1592,21 @@ body {
   function finishTest() {
     document.getElementById('test-run-card').style.display = 'none';
     document.getElementById('test-end-card').style.display = 'block';
-    
+
+    // 使用した問題IDをlocalStorageに蓄積（最大200問）
+    var usedIds = testState.questions.map(function(q){ return q.id; });
+    var prev = lsGet('recent_q_ids', []);
+    var merged = usedIds.concat(prev.filter(function(id){ return usedIds.indexOf(id) < 0; }));
+    lsSet('recent_q_ids', merged.slice(0, 200));
+
     var scorePct = testState.fillTotal > 0 ? Math.round(testState.score / testState.fillTotal * 100) : 0;
-    document.getElementById('test-score').textContent = 'スコア: ' + testState.score + ' / ' + testState.fillTotal + ' (' + scorePct + '%)';
-    
-    // 保存
+    var essayTotal = testState.questions.filter(function(q){ return q.type === 'essay'; }).length;
+    var essayOk    = testState.questions.filter(function(q){ return q.type === 'essay' && q.userEval === 'ok'; }).length;
+
+    document.getElementById('test-score').innerHTML =
+      '穴埋め: ' + testState.score + ' / ' + testState.fillTotal + '問 (' + scorePct + '%)<br>' +
+      '<span style="font-size:1.4rem;">論述: ' + essayOk + ' / ' + essayTotal + '問 できた</span>';
+
     var now = new Date();
     addTestHistory({
       id: Date.now(),
@@ -1557,7 +1614,9 @@ body {
       score: testState.score,
       total: testState.fillTotal,
       pct: scorePct,
-      questions: testState.questions // 詳細保存
+      essayOk: essayOk,
+      essayTotal: essayTotal,
+      questions: testState.questions
     });
   }
 
@@ -1595,7 +1654,7 @@ body {
       var scoreEl = document.createElement('div');
       scoreEl.style.fontWeight = 'bold';
       scoreEl.style.fontSize = '1.1rem';
-      scoreEl.textContent = '穴埋め正答率: ' + r.pct + '% (' + r.score + '/' + r.total + ')';
+      scoreEl.textContent = '穴埋め: ' + r.pct + '% (' + r.score + '/' + r.total + ')  論述: ' + (r.essayOk||0) + '/' + (r.essayTotal||5) + ' できた';
       
       left.appendChild(dateEl);
       left.appendChild(scoreEl);
@@ -1658,15 +1717,7 @@ body {
 </script>
 
 
-<div id="review-modal">
-  <div id="review-modal-content">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
-      <h3 id="review-modal-title">テスト振り返り</h3>
-      <button class="btn btn-outline btn-sm" id="btn-close-review">閉じる</button>
-    </div>
-    <div id="review-modal-list"></div>
-  </div>
-</div>
+
 
 </body>
 </html>
